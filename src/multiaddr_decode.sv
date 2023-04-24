@@ -28,6 +28,8 @@
 /// For each rule, it also returns the subset of addresses in {`addr_i`, `mask_i`} which
 /// match the rule {`addr_o[i]`, `mask_o[i]`}.
 module multiaddr_decode #(
+  /// Highest index which can happen in a rule.
+  parameter int unsigned NoIndices = 32'd0,
   /// Total number of rules.
   parameter int unsigned NoRules   = 32'd0,
   /// Address type inside the rules and to decode.
@@ -36,15 +38,17 @@ module multiaddr_decode #(
   /// The address decoder expects three fields in `rule_t`:
   ///
   /// typedef struct packed {
+  ///   int unsigned idx;
   ///   addr_t       addr;
   ///   addr_t       mask;
   /// } rule_t;
   ///
-  ///  - `addr`:       any address in the address space described by the rule
-  ///  - `mask`:       a bitmask of the same length as the address which transforms the address
-  ///                  above in a multi-address encoding. A '1' in this mask indicates that the
-  ///                  corresponding bit in address can take any value and it will still be part
-  ///                  of this rule's address space.
+  ///  - `idx`:   index of the rule, has to be < `NoIndices`.
+  ///  - `addr`:  any address in the address space described by the rule
+  ///  - `mask`:  a bitmask of the same length as the address which transforms the address
+  ///             above in a multi-address encoding. A '1' in this mask indicates that the
+  ///             corresponding bit in address can take any value and it will still be part
+  ///             of this rule's address space.
   ///
   /// {addr, mask} is an alternative representation to the typical interval [start, end)
   /// representation for a collection of addresses. With {addr, mask} we can represent contiguous
@@ -59,19 +63,19 @@ module multiaddr_decode #(
   parameter type         rule_t    = logic
 ) (
   /// Multi-address to decode.
-  input  addr_t               addr_i,
-  input  addr_t               mask_i,
+  input  addr_t                 addr_i,
+  input  addr_t                 mask_i,
   /// Address map.
-  input  rule_t [NoRules-1:0] addr_map_i,
+  input  rule_t [NoRules-1:0]   addr_map_i,
   /// Decoded indices.
-  output logic [NoRules-1:0]  select_o,
+  output logic  [NoIndices-1:0] select_o,
   /// Decoded multi-address.
-  output addr_t [NoRules-1:0] addr_o,
-  output addr_t [NoRules-1:0] mask_o,
+  output addr_t [NoIndices-1:0] addr_o,
+  output addr_t [NoIndices-1:0] mask_o,
   /// Decode is valid.
-  output logic                dec_valid_o,
+  output logic                  dec_valid_o,
   /// Decode is not valid, no matching rule found.
-  output logic                dec_error_o
+  output logic                  dec_error_o
 );
 
   logic [NoRules-1:0] matched_rules; // purely for address map debugging
@@ -87,6 +91,7 @@ module multiaddr_decode #(
 
     // Match the rules
     for (int unsigned i = 0; i < NoRules; i++) begin
+      automatic int unsigned idx = addr_map_i[i].idx;
       // We have a match if at least one address of the input
       // address set is a part of the rule's address set.
       // We have this condition when all bits in the input address match
@@ -101,15 +106,15 @@ module multiaddr_decode #(
         matched_rules[i] = 1'b1;
         dec_valid_o      = 1'b1;
         dec_error_o      = 1'b0;
-        select_o[i]     |= 1'b1;
+        select_o[idx]   |= 1'b1;
         // When there is a partial match, i.e. only a subset of the input address set
         // falls in the address set of the rule, we want to return this subset
         // {addr_o, mask_o}.
         // Bits which are masked in the input address but not in the addrmap rule
         // are resolved to the value in the addrmap, and are thus unmasked in the
         // output address set. All other bits remain masked or unchanged.
-        mask_o[i] = mask_i & addr_map_i[i].mask;
-        addr_o[i] = (~mask_i & addr_i) | (mask_i & addr_map_i[i].addr);
+        mask_o[idx] = mask_i & addr_map_i[i].mask;
+        addr_o[idx] = (~mask_i & addr_i) | (mask_i & addr_map_i[i].addr);
       end
     end
   end
