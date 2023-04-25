@@ -59,7 +59,7 @@ module multiaddr_decode #(
   /// When these properties are satisfied we can go from the [start, end) representation
   /// to the {addr, mask} representation (and viceversa) using the following equations:
   /// - mask =  {'0, {log2(end - start){1'b1}}}
-  /// - addr = start / (end - start)
+  /// - addr = start
   parameter type         rule_t    = logic
 ) (
   /// Multi-address to decode.
