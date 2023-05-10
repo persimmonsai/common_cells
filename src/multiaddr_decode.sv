@@ -130,6 +130,30 @@ module multiaddr_decode #(
       $warning($sformatf("Input address has %d bits and address map has %d bits.",
         $bits(addr_i), $bits(addr_map_i[0].addr)));
   end
+
+  // These following assumptions check the validity of the address map.
+  // The assumptions gets generated for each distinct pair of rules.
+  // Each assumption is present two times, as they rely on one rules being
+  // effectively ordered. Only one of the rules with the same function is
+  // active at a time for a given pair.
+  // check_start:        Enforces a smaller start than end address.
+  // check_idx:          Enforces a valid index in the rule.
+  // check_overlap:      Warns if there are overlapping address regions.
+  always @(addr_map_i) #0 begin : proc_check_addr_map
+    if (!$isunknown(addr_map_i)) begin
+      for (int unsigned i = 0; i < NoRules; i++) begin
+        // check the SLV ids
+        check_idx : assume (addr_map_i[i].idx < NoIndices) else
+            $fatal(1, $sformatf("This rule has a IDX that is not allowed!!!\n\
+            Violating rule %d.\n\
+            Rule> IDX: %h\n\
+            Rule> MAX_IDX: %h\n\
+            #####################################################",
+            i, addr_map_i[i].idx, (NoIndices-1)));
+      end
+    end
+  end
+
   // pragma translate_on
   `endif
   `endif
