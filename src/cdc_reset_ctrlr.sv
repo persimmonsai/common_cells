@@ -262,9 +262,22 @@ module cdc_reset_ctrlr_half
   logic                      initiator_isolate_out;
   logic                      initiator_clear_out;
 
+`ifdef XSIM
+  assign initiator_phase_transition_req =
+                          ((initiator_state_q == ISOLATE)                 ||
+                          (initiator_state_q == WAIT_ISOLATE_PHASE_ACK)   ||
+                          (initiator_state_q == CLEAR)                    ||
+                          (initiator_state_q == WAIT_CLEAR_PHASE_ACK)     ||
+                          (initiator_state_q == POST_CLEAR)               ||
+                          (initiator_state_q == FINISHED)) ? 1'b1 : 1'b0;
+
+`endif
+
   always_comb begin
     initiator_state_d              = initiator_state_q;
+`ifndef XSIM
     initiator_phase_transition_req = 1'b0;
+`endif
     initiator_isolate_out          = 1'b0;
     initiator_clear_out            = 1'b0;
     initiator_clear_seq_phase      = CLEAR_PHASE_IDLE;
@@ -277,7 +290,9 @@ module cdc_reset_ctrlr_half
       end
 
       ISOLATE: begin
+`ifndef XSIM
         initiator_phase_transition_req = 1'b1;
+`endif
         initiator_clear_seq_phase      = CLEAR_PHASE_ISOLATE;
         initiator_isolate_out          = 1'b1;
         initiator_clear_out            = 1'b0;
@@ -300,7 +315,9 @@ module cdc_reset_ctrlr_half
       end
 
       WAIT_ISOLATE_PHASE_ACK: begin
+`ifndef XSIM
         initiator_phase_transition_req = 1'b1;
+`endif
         initiator_clear_seq_phase      = CLEAR_PHASE_ISOLATE;
         initiator_isolate_out          = 1'b1;
         initiator_clear_out            = 1'b0;
@@ -312,7 +329,9 @@ module cdc_reset_ctrlr_half
       CLEAR: begin
         initiator_isolate_out          = 1'b1;
         initiator_clear_out            = 1'b1;
+`ifndef XSIM
         initiator_phase_transition_req = 1'b1;
+`endif
         initiator_clear_seq_phase      = CLEAR_PHASE_CLEAR;
         if (initiator_phase_transition_ack && clear_ack_i) begin
           initiator_state_d = POST_CLEAR;
@@ -333,7 +352,9 @@ module cdc_reset_ctrlr_half
       end
 
       WAIT_CLEAR_PHASE_ACK: begin
+`ifndef XSIM
         initiator_phase_transition_req = 1'b1;
+`endif
         initiator_clear_seq_phase      = CLEAR_PHASE_CLEAR;
         initiator_isolate_out          = 1'b1;
         initiator_clear_out            = 1'b1;
@@ -345,7 +366,9 @@ module cdc_reset_ctrlr_half
       POST_CLEAR: begin
         initiator_isolate_out          = 1'b1;
         initiator_clear_out            = 1'b0;
+`ifndef XSIM
         initiator_phase_transition_req = 1'b1;
+`endif
         initiator_clear_seq_phase      = CLEAR_PHASE_POST_CLEAR;
         if (initiator_phase_transition_ack) begin
           initiator_state_d = FINISHED;
@@ -355,7 +378,9 @@ module cdc_reset_ctrlr_half
       FINISHED: begin
         initiator_isolate_out          = 1'b1;
         initiator_clear_out            = 1'b0;
+`ifndef XSIM
         initiator_phase_transition_req = 1'b1;
+`endif
         initiator_clear_seq_phase      = CLEAR_PHASE_IDLE;
         if (initiator_phase_transition_ack) begin
           initiator_state_d = IDLE;

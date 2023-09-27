@@ -126,6 +126,13 @@ module cdc_4phase_src #(
     .serial_o( ack_synced  )
   );
 
+`ifdef XSIM
+  assign ready_o = (state_q == IDLE) ?
+                   DECOUPLED ? 1'b1 : 1'b0 :
+                   (state_q == WAIT_ACK_DEASSERT) ?
+                   DECOUPLED ? 1'b0 : 1'b1 :
+                   1'b0;
+`endif
   // FSM for the 4-phase handshake
   always_comb begin
     state_d    = state_q;
@@ -136,11 +143,13 @@ module cdc_4phase_src #(
       IDLE: begin
         // If decoupling is disabled, defer assertion of ready until the
         // handshake with the dst is completed
+`ifndef XSIM
         if (DECOUPLED) begin
           ready_o = 1'b1;
         end else begin
           ready_o = 1'b0;
         end
+`endif
         // Sample a new item when the valid signal is asserted.
         if (valid_i) begin
           data_src_d = data_i;
@@ -158,9 +167,11 @@ module cdc_4phase_src #(
       WAIT_ACK_DEASSERT: begin
         if (ack_synced == 1'b0) begin
           state_d = IDLE;
+`ifndef XSIM
           if (!DECOUPLED) begin
             ready_o = 1'b1;
           end
+`endif
         end
       end
       default: begin
