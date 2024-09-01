@@ -34,7 +34,8 @@ module stream_fifo_segmented #(
     input  logic                  ready_i     // pop head from fifo
 );
 
-    localparam int unsigned FifoSegments = (DEPTH + MAX_SEGMENT_SIZE - 1)/MAX_SEGMENT_SIZE;
+    localparam int unsigned CMaxSegmentSize = MAX_SEGMENT_SIZE > DEPTH ? DEPTH : MAX_SEGMENT_SIZE;
+    localparam int unsigned FifoSegments = (DEPTH + CMaxSegmentSize - 1)/CMaxSegmentSize;
 
     typedef struct {
         T data_i;
@@ -43,7 +44,7 @@ module stream_fifo_segmented #(
         logic valid_o;
         logic ready_i;
         logic ready_o;
-        logic [$clog2(MAX_SEGMENT_SIZE)-1:0] usage_o;
+        logic [$clog2(CMaxSegmentSize)-1:0] usage_o;
     } segment_if_t;
 
     segment_if_t segment_if[FifoSegments];
@@ -72,12 +73,12 @@ module stream_fifo_segmented #(
         end
 
         localparam int unsigned SegmentDepth =
-            (BALANCE_SEGMENTS == 1) ? (((i+1)*MAX_SEGMENT_SIZE)<=DEPTH ?
+            (BALANCE_SEGMENTS == 1) ? (((i+1)*CMaxSegmentSize)<=DEPTH ?
                                                 (DEPTH / FifoSegments) :
                                                 DEPTH - (i*(DEPTH / FifoSegments))) :
-                                      (((i+1)*MAX_SEGMENT_SIZE)<=DEPTH ?
-                                                MAX_SEGMENT_SIZE :
-                                                (DEPTH % MAX_SEGMENT_SIZE));
+                                      (((i+1)*CMaxSegmentSize)<=DEPTH ?
+                                                CMaxSegmentSize :
+                                                (DEPTH % CMaxSegmentSize));
 
         logic [$clog2(SegmentDepth)-1:0] segment_usage;
 
