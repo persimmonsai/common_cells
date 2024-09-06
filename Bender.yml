@@ -93,6 +93,7 @@ sources:
   - src/stream_to_mem.sv
   - src/stream_arbiter_flushable.sv
   - src/stream_fifo_optimal_wrap.sv
+  - src/stream_fifo_segmented.sv
   - src/stream_register.sv
   - src/stream_xbar.sv
   # Level 3

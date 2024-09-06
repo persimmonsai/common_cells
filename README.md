@@ -113,6 +113,7 @@ Please note that cells with status *deprecated* are not to be used for new desig
 | `fifo_v3`                  | FIFO register with generic fill counts                                  | active       |               |
 | `stream_fifo`              | FIFO register with ready/valid interface                                | active       |               |
 | `stream_fifo_optimal_wrap` | Wrapper that optimally selects either a spill register or a FIFO        | active       |               |
+| `stream_fifo_segmented`    | Wrapper that creates a chain of stream_fifos                            | active       |               |
 | `generic_fifo`             | FIFO register without thresholds                                        | *deprecated* | `fifo_v3`     |
 | `generic_fifo_adv`         | FIFO register without thresholds                                        | *deprecated* | `fifo_v3`     |
 | `sram`                     | SRAM behavioral model                                                   | active       |               |
