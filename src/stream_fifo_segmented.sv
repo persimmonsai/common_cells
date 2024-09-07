@@ -80,7 +80,8 @@ module stream_fifo_segmented #(
                                                 CMaxSegmentSize :
                                                 (DEPTH % CMaxSegmentSize));
 
-        logic [$clog2(SegmentDepth)-1:0] segment_usage;
+        localparam int CSegmentDepth = SegmentDepth == 1 ? 2 : SegmentDepth;
+        logic [$clog2(CSegmentDepth)-1:0] segment_usage;
 
         stream_fifo #(
             .FALL_THROUGH  ( FALL_THROUGH          ),
