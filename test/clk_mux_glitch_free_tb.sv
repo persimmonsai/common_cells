@@ -20,8 +20,8 @@
 `define min(a,b) (((a) < (b))? (a) : (b))
 
 module clk_mux_glitch_free_tb;
-  timeunit 1ns;
-  timeprecision 1ps;
+  // timeunit 1ns;
+  // timeprecision 1ps;
 
   parameter int unsigned NUM_INPUTS = 10;
   localparam int unsigned SEL_WIDTH = $clog2(NUM_INPUTS);
